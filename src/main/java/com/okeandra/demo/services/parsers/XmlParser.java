@@ -132,7 +132,6 @@ public class XmlParser {
                         offers.add(offer);
                     }
                 }
-
             }
 
         } catch (Exception e) {
