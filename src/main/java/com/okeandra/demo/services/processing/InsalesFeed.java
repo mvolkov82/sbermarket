@@ -1,13 +1,10 @@
 package com.okeandra.demo.services.processing;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import com.okeandra.demo.exceptions.FtpTransportException;
-import com.okeandra.demo.models.Item;
-import com.okeandra.demo.models.WarehouseItemCount;
-import com.okeandra.demo.services.parsers.ExcelParser;
+import com.okeandra.demo.models.ProcessResult;
 import com.okeandra.demo.services.transport.impl.FtpTransporterImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,17 +13,14 @@ import org.springframework.stereotype.Service;
 @Service
 public class InsalesFeed implements Processing {
     private FtpTransporterImpl ftp;
-    //    private FtpDownLoader ftpDownLoader = new FtpDownLoader();
     private ExcelWarehouseLimiter excelWarehouseLimiter;
-
     private List<String> resultText = new ArrayList<>();
-
     private List<String> vendorLimitsExceptions = getVendorExceptions();
 
     @Value("${ftp.xls.source.file}")
     private String xlsSourceFile;
 
-    @Value("${ftp.xls.final.destination}")
+    @Value("${ftp.xls.source.file}")
     private String xlsDownloadedFile;
 
     @Value("${stock.limit.okeandra}")
@@ -34,6 +28,9 @@ public class InsalesFeed implements Processing {
 
     @Value("${ftp.xls.final.file}")
     private String xlsResultFile;
+
+    @Value("${ftp.xls.source.directory}")
+    private String xlsSourceFtpFolder;
 
     @Value("${ftp.okeandra.destination.directory}")
     private String ftpDestinationDirectory;
@@ -55,7 +52,7 @@ public class InsalesFeed implements Processing {
         boolean isDangerLimitFixed = false;
         boolean isResultFileUploaded = false;
         try {
-            isXlsSourceCopied = ftp.copyFileFromFtp(xlsSourceFile);
+            isXlsSourceCopied = ftp.downloadFileFromFtp(xlsSourceFtpFolder, xlsSourceFile);
             resultText.add("Файл " + xlsSourceFile + " скопирован с FTP");
         } catch (FtpTransportException e) {
             resultText.add("Ошибка при копировании файла " + xlsSourceFile + " с FTP. Ошибка: " + e.getMessage());
@@ -63,15 +60,18 @@ public class InsalesFeed implements Processing {
 
         //Устанавливаем лимиты в XLS (Океандра до 3 шт - обнуляем остаток, кроме DF, Kapous, Olin -> vendorLimitsExceptions;
         if (isXlsSourceCopied) {
-            isDangerLimitFixed = excelWarehouseLimiter.setStockLimits(xlsDownloadedFile, warehouseDangerLimiter, vendorLimitsExceptions);
-            resultText.add("Файл " + xlsDownloadedFile + " безопасный остаток зафиксирован");
+            ProcessResult setLimitsProcess = excelWarehouseLimiter.setStockLimits(xlsDownloadedFile, warehouseDangerLimiter, vendorLimitsExceptions);
+            isDangerLimitFixed = setLimitsProcess.isSuccess();
+            if (isDangerLimitFixed) {
+                resultText.add(setLimitsProcess.getLogMessage());
+                resultText.add("Файл " + xlsDownloadedFile + " безопасный остаток зафиксирован");
+            }
         }
 
         //Обработанный XLS файл отправляем в FTP
         if (isDangerLimitFixed) {
             try {
-//                String filenameForFtp = getFilenameFromPath(xlsResultFile);
-                ftp.copyFileToFtp(ftpDestinationDirectory, xlsDownloadedFile, xlsResultFile);
+                ftp.uploadFileToFtp(ftpDestinationDirectory, xlsDownloadedFile, xlsResultFile);
                 resultText.add("Файл выгрузки для Okeandra отправлен на FTP");
                 isResultFileUploaded = true;
             } catch (FtpTransportException e) {
@@ -81,61 +81,11 @@ public class InsalesFeed implements Processing {
 
         if (isResultFileUploaded) {
             resultText.add("Все этапы обработки успешно завершены");
+        } else {
+            resultText.add("Ошибка! Фид для Insales НЕ обновлен!!!!!!!!!!!");
         }
 
         return resultText;
-
-    /*
-        //Скачиваем XML фид с Insales и кладем его и кладем в заданную в настройках папку
-        String localXmlDestinationFilePath = xmlSaveToPath + xmlSourceUrl.substring(xmlSourceUrl.lastIndexOf('/') + 1, xmlSourceUrl.length());
-        boolean isYmlReceipted = xmlTransporter.getXmlFromUrlAndSave(xmlSourceUrl, localXmlDestinationFilePath);
-
-
-        if (isXlsSourceCopied && isYmlReceipted) {
-            HashMap<Item, List<WarehouseItemCount>> stock = getStockFromXls();
-
-            // Создаем YML (заголовок, тело(List<Offer>), подвал)
-            YmlObject yml = YmlObject.getYmlObject(localXmlDestinationFilePath);
-            resultText.add("Парсинг YML файла прошел успешно");
-
-
-            //Если хотим весь товар разделить по датам в зависимости от количества - устанавливаем в List<Offer>-ах setDate
-//            ShipmentBuilder shipmentBuilderDependsOurWarehouse = new ShipmentBuilderDependsOurWarehouse(yml, stock, 1, 2);
-//            shipmentBuilderDependsOurWarehouse.addShipmentOptions();
-//            resultText.add("Выполнено разделение по датам в зависимости от наличия");
-
-            //Если хотим разделить по датам только избранные товары
-            List<String> idForAddingShipmentOptions = Arrays.asList(new String[]{"AUT00001915", "PLL00000572", "ТЦЦZD003517" ,"PLL00002457"});
-            ShipmentBuilder shipmentBuilder = new ShipmentBuilderForSpecialItems(yml, 2, 1, idForAddingShipmentOptions);
-            shipmentBuilder.addShipmentOptions();
-
-            //Превращаем YMLObject снова в XML и сохраняем его.
-            xmlFinalCreator.saveXmlFile(xmlResultFile, yml);
-            resultText.add("Создан новый YML-фид");
-
-            //Отправляем готовый фид на FTP
-            try {
-                String filenameForFtp = getFilenameFromPath(xmlResultFile);
-                ftp.copyFileToFtp(ftpDestinationDirectory, xmlResultFile, filenameForFtp);
-                resultText.add("YML-фид отправлен на FTP");
-            } catch (FtpTransportException e) {
-                System.out.println(e.getMessage());
-            }
-        }
-*/
-
-    }
-
-    private HashMap<Item, List<WarehouseItemCount>> getStockFromXls() {
-        ExcelParser excelParser = new ExcelParser();
-        HashMap<Item, List<WarehouseItemCount>> stock = excelParser.getWarehouseStock(xlsDownloadedFile);
-        resultText.add("Парсинг XLS файла прошел успешно");
-        return stock;
-    }
-
-    private String getFilenameFromPath(String filePath) {
-//        return filePath.substring(filePath.lastIndexOf('/') + 1, filePath.length());
-        return filePath.substring(filePath.lastIndexOf('/') + 1);
     }
 
     @Autowired

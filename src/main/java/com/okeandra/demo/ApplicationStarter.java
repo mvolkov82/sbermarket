@@ -1,6 +1,8 @@
 package com.okeandra.demo;
 
 
+import javax.swing.*;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -19,16 +21,6 @@ public class ApplicationStarter {
 
     public static void main(String[] args) {
         SpringApplication.run(ApplicationStarter.class, args);
-//        ProcessingController processingController = new ProcessingController();
-//        demoStarter.start();
-
-
     }
-    /*  Тушь XXL СУПЕРОБЪЕМ эффект НАКЛАДНЫХ РЕСНИЦ 8гр/К10	AUT00001915
-        Belita Young ВВ крем для лица 30мл	PLL00000572
-        LUXURY Тушь для ресниц Королевский объем 12мл	ТЦЦZD003517
-        Гель-фиксатор для бровей "Brow fixing" К6	PLL00002457
-
-    }*/
 }
 

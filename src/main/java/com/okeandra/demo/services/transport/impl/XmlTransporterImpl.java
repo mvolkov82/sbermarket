@@ -27,6 +27,7 @@ public class XmlTransporterImpl implements XmlTransporter {
             fileOutputStream.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
 
             boolean isRedundantLineExcluded = excludeTagDoctypeFromXml(saveFilePath);
+
             if (isRedundantLineExcluded){
                 return true;
             }

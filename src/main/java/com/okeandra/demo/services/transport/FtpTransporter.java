@@ -5,6 +5,6 @@ import org.springframework.stereotype.Component;
 
 @Component
 public interface FtpTransporter extends Transporter{
-    boolean copyFileToFtp(String ftpDestinationDirectory, String sourceFilePath, String newFilename) throws FtpTransportException;
-    boolean copyFileFromFtp(String filename) throws FtpTransportException;
+    boolean uploadFileToFtp(String ftpDestinationDirectory, String sourceFilePath, String newFilename) throws FtpTransportException;
+    boolean downloadFileFromFtp(String ftpFolder, String fileName) throws FtpTransportException;
 }

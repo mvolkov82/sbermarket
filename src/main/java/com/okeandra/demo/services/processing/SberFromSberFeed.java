@@ -2,6 +2,7 @@ package com.okeandra.demo.services.processing;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -15,85 +16,93 @@ import com.okeandra.demo.services.transport.XmlTransporter;
 import com.okeandra.demo.services.transport.impl.FtpTransporterImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 
 
 @Component
-public class DeliveryFromSberWarehouse implements Processing {
+public class SberFromSberFeed implements Processing {
 
     private FtpTransporterImpl ftp;
-//    private FtpDownLoader ftpDownLoader = new FtpDownLoader();
     private XmlFinalCreator xmlFinalCreator;
     private XmlTransporter xmlTransporter;
     private FromFileReader fileReader;
+    private ResourceLoader resourceLoader;
+
 
     @Value("${items.sberwarehouse}")
-    String sberItemsFile;
+    private String sberItemsFile;
 
     @Value("${ftp.xls.source.file}")
-    String xlsSourceFile;
-
-    @Value("${ftp.xls.final.destination}")
-    String xlsDownloadedFile;
+    private String xlsSourceFile;
 
     @Value("${xml.source.url}")
-    String xmlSourceUrl;
-
-    @Value("${xml.local.destination}")
-    String xmlLocalPath;
-
-    @Value("${xml.result.file}")
-    String xmlResultFile;
+    private String xmlSourceUrl;
 
     @Value("${items.sberwarehouse.result.file}")
-    String xmlForDeliveryFromSberWarehouse;
+    private String xmlForDeliveryFromSberWarehouse;
+
+   @Value("${ftp.xls.source.directory}")
+   private String xlsSourceFtpFolder;
 
     @Value("${ftp.xml.destination.directory}")
-    private String ftpDestinationDirectory;
+    private String ftpSberDirectory;
+
 
     @Autowired
-    public DeliveryFromSberWarehouse(FtpTransporterImpl ftp, XmlFinalCreator xmlFinalCreator, XmlTransporter xmlTransporter, FromFileReader fileReader) {
+    public SberFromSberFeed(FtpTransporterImpl ftp, XmlFinalCreator xmlFinalCreator, XmlTransporter xmlTransporter, FromFileReader fileReader, ResourceLoader resourceLoader) {
         this.ftp = ftp;
         this.xmlFinalCreator = xmlFinalCreator;
         this.xmlTransporter = xmlTransporter;
         this.fileReader = fileReader;
+        this.resourceLoader = resourceLoader;
     }
 
     @Override
     public List<String> start() {
         List<String> resultText = new ArrayList<>();
 
-        //Скачиваем XLS c FTP и кладем в заданную в настройках папку
-        boolean isXlsSourceCopied = false;
+        //Скачиваем XLS c FTP и кладем в корневую папку
+        boolean isXlsDownloaded = false;
         try {
-            isXlsSourceCopied = ftp.copyFileFromFtp(xlsSourceFile);
+            isXlsDownloaded = ftp.downloadFileFromFtp(xlsSourceFtpFolder, xlsSourceFile);
             resultText.add("Файл " + xlsSourceFile + " скопирован с FTP");
         } catch (FtpTransportException e) {
             resultText.add("Ошибка при копировании файла " + xlsSourceFile + " с FTP. Ошибка: " + e.getMessage());
         }
 
-        //Скачиваем XML фид и кладем его и кладем в заданную в настройках папку
-        String localXmlDestinationFilePath = xmlLocalPath + getFilenameFromPath(xmlSourceUrl);
-        boolean isYmlReceipted = xmlTransporter.getXmlFromUrlAndSave(xmlSourceUrl, localXmlDestinationFilePath);
+        //Скачиваем XML фид и кладем его в root папку
+        Resource resourceXmlFile = resourceLoader.getResource("classpath:" + getFilenameFromPath(xmlSourceUrl));
+        boolean isYmlReceipted = xmlTransporter.getXmlFromUrlAndSave(xmlSourceUrl, resourceXmlFile.getFilename());
 
-        Set<String> sberItems;
-
+        //Скачиваем SberItems.txt c FTP и кладем в корневую папку
+        boolean isSberItemsDownloaded = false;
         try {
-            sberItems = fileReader.getUniqueValuesFromTextFile(sberItemsFile);
-            resultText.add("Файл cо списком артикулов(" + sberItems.size() + " шт.) считан (" + sberItemsFile + ")");
-        } catch (IOException e) {
-            throw new DeliveryFromSberException(e.getMessage(), "Ошибка при получении списка артикулов для отгрузки со склада Сбера");
+            isSberItemsDownloaded = ftp.downloadFileFromFtp(ftpSberDirectory, sberItemsFile);
+            resultText.add("Файл со списком товаров для отгрузки со склада Сбера " + sberItemsFile + " получен с FTP");
+        } catch (FtpTransportException e) {
+            resultText.add("Ошибка при получении файла-списка товаров (со склада Сбера) " + sberItemsFile + " с FTP. Ошибка: " + e.getMessage());
         }
 
+        Set<String> sberItems = new LinkedHashSet<>();
+        if (isSberItemsDownloaded) {
+            try {
+                sberItems = fileReader.getUniqueValuesFromTextFile(sberItemsFile);
+                resultText.add("Файл cо списком артикулов(" + sberItems.size() + " шт.) считан (" + sberItemsFile + ")");
+            } catch (IOException e) {
+                throw new DeliveryFromSberException(e.getMessage(), "Ошибка при получении списка артикулов для отгрузки со склада Сбера");
+            }
+        }
 
-        if (isXlsSourceCopied && isYmlReceipted && !sberItems.isEmpty()) {
-            YmlObject yml = YmlObject.getYmlObjectOnlyForSpecialItems(localXmlDestinationFilePath);
+        if (isXlsDownloaded && isYmlReceipted && !sberItems.isEmpty()) {
+            YmlObject yml = YmlObject.getYmlObjectOnlyForSpecialItems(resourceXmlFile.getFilename());
             resultText.add("Парсинг YML файла прошел успешно");
 
             List<Offer> itemsResult = yml.generateOffersOnlyForSpecialItems(sberItems);
             resultText.add("Создан новый YML с товарами из файла. Товаров в фиде: " + yml.getBody().size());
 
-            for (Offer offer:itemsResult) {
+            for (Offer offer : itemsResult) {
                 resultText.add(offer.getVendorCode() + " " + offer.getName() + " Цена: " + offer.getPrice());
             }
 
@@ -106,7 +115,7 @@ public class DeliveryFromSberWarehouse implements Processing {
 
             try {
                 String filenameForFtp = getFilenameFromPath(xmlForDeliveryFromSberWarehouse);
-                ftp.copyFileToFtp(ftpDestinationDirectory, xmlForDeliveryFromSberWarehouse, filenameForFtp);
+                ftp.uploadFileToFtp(ftpSberDirectory, xmlForDeliveryFromSberWarehouse, filenameForFtp);
                 resultText.add("YML-фид для отгрузки со склада Сбера отправлен на FTP");
             } catch (FtpTransportException e) {
                 System.out.println(e.getMessage());

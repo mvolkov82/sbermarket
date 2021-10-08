@@ -12,6 +12,7 @@
             font-family: Calibri;
             color: white;
         }
+
         .todo {
             height: 100%;
             overflow-x: auto;
@@ -42,40 +43,39 @@
             cursor: pointer;
 
             color: white;
-            width: 150px;
-            height: 50px;
+            width: 115px;
+            height: 45px;
             font-size: 1rem;
             border-radius: 50%;
             border: 0;
-            -webkit-box-shadow: 5px 5px 10px 0px rgba(0,0,0,0.75);
-            -moz-box-shadow: 5px 5px 10px 0px rgba(0,0,0,0.75);
-            box-shadow: 5px 5px 10px 0px rgba(0,0,0,0.75);
+            -webkit-box-shadow: 5px 5px 10px 0px rgba(0, 0, 0, 0.75);
+            -moz-box-shadow: 5px 5px 10px 0px rgba(0, 0, 0, 0.75);
+            box-shadow: 5px 5px 10px 0px rgba(0, 0, 0, 0.75);
         }
 
         .todo .todo-button:hover {
-            -webkit-box-shadow: 4px 4px 10px 0px rgba(0,0,0,0.75);
-            -moz-box-shadow: 4px 4px 10px 0px rgba(0,0,0,0.75);
-            box-shadow: 4px 4px 10px 0px rgba(0,0,0,0.75);
+            -webkit-box-shadow: 4px 4px 10px 0px rgba(0, 0, 0, 0.75);
+            -moz-box-shadow: 4px 4px 10px 0px rgba(0, 0, 0, 0.75);
+            box-shadow: 4px 4px 10px 0px rgba(0, 0, 0, 0.75);
         }
 
         .todo .todo-button.todo-button-add {
-            background: blue;
-
+            background: slateblue;
         }
 
         .todo .todo-button.todo-button-add:hover {
-            background: mediumblue;
+            background: dodgerblue;
         }
 
         .todo .todo-button.todo-button-delete {
-            width: 25px;
-            height: 25px;
-            background: red;
+            width: 115px;
+            height: 45px;
+            background: gray;
             font-size: 1rem;
         }
 
         .todo .todo-button.todo-button-delete:hover {
-            background: darkred;
+            background: darkgray;
         }
 
         .todo .todo-card {
@@ -86,9 +86,9 @@
             margin: 1rem 0;
 
             border-radius: 5px;
-            -webkit-box-shadow: 1px 1px 10px 0px rgba(0,0,0,0.75);
-            -moz-box-shadow: 1px 1px 10px 0px rgba(0,0,0,0.75);
-            box-shadow: 1px 1px 10px 0px rgba(0,0,0,0.75);
+            -webkit-box-shadow: 1px 1px 10px 0px rgba(0, 0, 0, 0.75);
+            -moz-box-shadow: 1px 1px 10px 0px rgba(0, 0, 0, 0.75);
+            box-shadow: 1px 1px 10px 0px rgba(0, 0, 0, 0.75);
         }
 
         .todo .todo-card .label,
@@ -111,21 +111,51 @@
     <div class="todo-canvas">
 
         <div class="todo-header">
-            <button class="todo-button todo-button-add" id="button-start-okeandra" onclick=startCreatingFeedOkeandra()>Okeandra</button>
-            <button class="todo-button todo-button-add" id="button-start-sber" onclick=startCreatingFeedSber()>СберМегаМаркет</button>
-            <button class="todo-button todo-button-add" id="button-sber-from-sber" onclick=startCreatingFeedSberFromSber()>Отгрузка со Сбера</button>
+            <h2>Подготовка фидов для Insales и СберМегаМаркет</h2>
         </div>
         <div class="todo-list">
             <div class="todo-card" id="card-1">
-                <li>Okeandra - обработка 1СItems.xls: установка безопасного остатка. <br>
-                    <a href="https://cw52673.tmweb.ru/1CItems.xls"> [Исходный файл]</a>
-                    <a href="https://cw52673.tmweb.ru/okeandra/1CItems_feed.xls"> [Готовый файл]</a></li>
+                <li> Okeandra - обработка 1СItems.xls: установка безопасного остатка.
+                    <button class="todo-button todo-button-add" id="button-start-okeandra" onclick=startCreatingFeedOkeandra()>
+                        Insales
+                    </button>
             </div>
             <div class="todo-card" id="card-2">
-                <li>СберМегаМаркет - подготовка фида: установка срока "день в день" для избранных товаров.</li>
+                <li>Сбер - Duty Free - подготовка фида для Duty Free из наличия на Площади <br>
+                    <button class="todo-button todo-button-add" id="button-start-sber-duty-free" onclick=startCreatingFeedDutyFree()>
+                        Duty Free
+                    </button>
             </div>
             <div class="todo-card" id="card-3">
-                <li>Отгрузка со Сбера - подготовка фида для отгрузки со склада СберМегаМаркета.</li>
+                <li>СберМегаМаркет - подготовка фида: установка срока "день в день" для избранных товаров.</li>
+                <button class="todo-button todo-button-delete" id="button-start-sber"  onclick=startCreatingFeedSber()>
+                    День в день
+                </button>
+            </div>
+            <div class="todo-card" id="card-4">
+                <li>Отгрузка со Сбера - подготовка фида для отгрузки со склада Сбера.</li>
+                <button class="todo-button todo-button-delete" id="button-sber-from-sber"
+                        onclick=startCreatingFeedSberFromSber()> Склад Сбера
+                </button>
+            </div>
+        </div>
+
+        <div><h3>Файлы</h3></div>
+        <div class="todo-list">
+            <div class="todo-card" id="card-download">
+                <div>Выгрузка из 1С -> <a href="https://cw52673.tmweb.ru/1CItems.xls">1CItems.xls</a></div>
+                <div>Выгрузка из 1С + лимиты -> <a href="https://cw52673.tmweb.ru/okeandra/1CItems_feed.xls">1CItems_feed.xls</a>
+                </div>
+                <div><br></div>
+                <div>Insales фид (основные товары)-> <a href="https://okeandra.ru/marketplace/79749.xml" target="_blank">79749.xml</a>
+                <div>Insales фид (DutyFree) -> <a href="https://okeandra.ru/marketplace/84930.xml" target="_blank">84930.xml</a>
+                <div>Фид для СберМегаМаркета -> <a href="https://cw52673.tmweb.ru/sbermegamarket/resultDeliveryFromOkeandra.xml" target="_blank">resultDeliveryFromOkeandra.xml</a>
+                <div>Фид для СберМегаМаркета (Duty Free) -> <a href="https://cw52673.tmweb.ru/sbermegamarket/SberDutyFree.xml" target="_blank">SberDutyFree.xml</a>
+                </div>
+                <div>Товары отгружаемые "день в день" -> <a href="https://cw52673.tmweb.ru/sbermegamarket/dayperday.txt" target="_blank">dayperday.txt</a></div>
+                <div><br></div>
+                <div>Фид для товаров отгружаемых со склада Сбера -> <a href="https://cw52673.tmweb.ru/sbermegamarket/resultDeliveryFromSberWarehouse.xml" target="_blank">xml</a></div>
+                <div>Список товаров отгружаемых со склада Сбера -> <a href="https://cw52673.tmweb.ru/sbermegamarket/SberItems.txt" target="_blank">SberItems.txt</a></div>
             </div>
         </div>
     </div>
@@ -134,13 +164,19 @@
 </body>
 <script>
     function startCreatingFeedOkeandra() {
-        window.location='http://localhost:8080/create-feed-okeandra';
+        window.location = '/create-feed-okeandra';
     }
+
+    function startCreatingFeedDutyFree() {
+        window.location = '/create-sber-duty';
+    }
+
     function startCreatingFeedSber() {
-        window.location='http://localhost:8080/create-feed-sber';
+        window.location = '/create-feed-sber';
     }
+
     function startCreatingFeedSberFromSber() {
-        window.location='http://localhost:8080/create-sber-from-sber';
+        window.location = '/create-sber-from-sber';
     }
 </script>
 </html>

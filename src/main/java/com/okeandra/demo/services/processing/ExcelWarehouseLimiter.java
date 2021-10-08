@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 
+import com.okeandra.demo.models.ProcessResult;
 import com.okeandra.demo.services.parsers.ExcelParser;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Row;
@@ -17,7 +18,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class ExcelWarehouseLimiter extends ExcelParser {
 
-    public boolean setStockLimits(String xlsFileName, int okeandraLimit, List<String> exceptionVendors) {
+    public ProcessResult setStockLimits(String xlsFileName, int okeandraLimit, List<String> exceptionVendors) {
+        StringBuilder log = new StringBuilder();
         int correctedItemsCount = 0;
 
         String tmpFile = getTempFileName(xlsFileName);
@@ -57,15 +59,19 @@ public class ExcelWarehouseLimiter extends ExcelParser {
                     System.out.println(String.format("%s danger amount %d -> 0 %s : %s", itemId, amountOkeandra, vendor, itemName));
                 }
             }
-
+            log.append(String.format("Обнулено из-за опасного остатка %s товаров ", correctedItemsCount));
             excelBook.write(out);
 
         } catch (IOException e) {
-            System.out.println("I/O exception in setStockLimits()");
-            return false;
+            String message = String.format("I/O exception in setStockLimits() : ", e.getMessage());
+            System.out.println(message);
+            log.append(message);
+            return new ProcessResult(false, log.toString());
         } catch (Exception e) {
-            System.out.println("Exception in setStockLimits(): " + e);
-            return false;
+            String message = String.format("Exception in setStockLimits() : ", e.getMessage());
+            System.out.println(message);
+            log.append(message);
+            return new ProcessResult(false, log.toString());
         }
         System.out.println("-------Corrected " + correctedItemsCount + "----------");
 
@@ -73,10 +79,12 @@ public class ExcelWarehouseLimiter extends ExcelParser {
         try {
             copyFileFromTo(tmpFile, xlsFileName);
         } catch (IOException e) {
-            System.out.println("Ошибка при подмене временного файла");
-            return false;
+            String message = "Ошибка при подмене временного файла";
+            System.out.println(message);
+            log.append(message);
+            return new ProcessResult(false, log.toString());
         }
-        return true;
+        return new ProcessResult(true, log.toString());
     }
 
     private void copyFileFromTo(String sourceFile, String destinationFile) throws IOException {

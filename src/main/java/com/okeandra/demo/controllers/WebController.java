@@ -1,9 +1,9 @@
 package com.okeandra.demo.controllers;
 
-import java.io.IOException;
 import java.util.List;
 
-import com.okeandra.demo.services.processing.DeliveryFromSberWarehouse;
+import com.okeandra.demo.services.processing.SberDutyFreeFeed;
+import com.okeandra.demo.services.processing.SberFromSberFeed;
 import com.okeandra.demo.services.processing.InsalesFeed;
 import com.okeandra.demo.services.processing.SberFeed;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,15 +15,17 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
 public class WebController {
-    private DeliveryFromSberWarehouse deliveryFromSber;
+    private SberFromSberFeed deliveryFromSber;
     private InsalesFeed insalesFeed;
     private SberFeed sberFeed;
+    private SberDutyFreeFeed sberDutyFreeFeed;
 
     @Autowired
-    public WebController(DeliveryFromSberWarehouse deliveryFromSber, InsalesFeed insalesFeed, SberFeed sberFeed) {
+    public WebController(SberFromSberFeed deliveryFromSber, InsalesFeed insalesFeed, SberFeed sberFeed, SberDutyFreeFeed sberDutyFreeFeed) {
         this.deliveryFromSber = deliveryFromSber;
         this.insalesFeed = insalesFeed;
         this.sberFeed = sberFeed;
+        this.sberDutyFreeFeed = sberDutyFreeFeed;
     }
 
     @GetMapping("/")
@@ -51,6 +53,16 @@ public class WebController {
         model.addAttribute("result", log);
         return "result";
     }
+
+
+    @GetMapping("/create-sber-duty")
+    public String createFeedForSberDutyFree(Model model) {
+        List<String> log = sberDutyFreeFeed.start();
+        model.addAttribute("result", log);
+        return "result";
+    }
+
+
 
 //    @GetMapping("/set-limits")
 //    public String setLimits(Model model) {

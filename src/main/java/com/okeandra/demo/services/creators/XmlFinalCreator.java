@@ -11,8 +11,9 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.io.StringWriter;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import com.okeandra.demo.exceptions.BodyXmlGenerationException;
 import com.okeandra.demo.models.Offer;
@@ -47,6 +48,8 @@ public class XmlFinalCreator {
 
     public String getBodyAsXML(YmlObject ymlObject) {
         Document document;
+
+        String headerWidthCurrentDateTime = setHeaderCurrentDateTime(ymlObject.getHeaderContent());
 
         try {
             DocumentBuilderFactory documentFactory = DocumentBuilderFactory.newInstance();
@@ -117,7 +120,7 @@ public class XmlFinalCreator {
                 Element shipmentOptions = document.createElement("shipment-options");
                 blockOffer.appendChild(shipmentOptions);
                 Element shipmentOptionElement = document.createElement("option");
-                shipmentOptionElement.setAttribute("order-before", "00:00");
+                shipmentOptionElement.setAttribute("order-before", "01:00");
                 if (offer.getDays() == null) {
                     shipmentOptionElement.setAttribute("days", String.valueOf(1));
                 } else {
@@ -159,5 +162,18 @@ public class XmlFinalCreator {
             System.out.println(e.getMessage());
         }
         return stringWriter.toString();
+    }
+
+    private String setHeaderCurrentDateTime(String ymlHeader) {
+        String prefix = "<yml_catalog date=\"";
+        String postfix = "\">";
+        int startIndex = ymlHeader.indexOf(prefix);
+        int endIndex = ymlHeader.indexOf(postfix);
+        String feedDateTime = ymlHeader.substring(startIndex+prefix.length(), endIndex);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        String feedNowDateTime = LocalDateTime.now().format(formatter);
+        return feedDateTime;
+
     }
 }

@@ -34,25 +34,31 @@ public class FtpTransporterImpl implements FtpTransporter {
     @Value("${ftp.xls.source.directory}")
     private String sourceFtpDirectory;
 
-    @Value("${ftp.xls.final.destination}")
-    private String destinationFileName;
+//    @Value("${ftp.xls.source.file}")
+//    private String destinationFileName;
 
 
     @Override
-    public boolean copyFileFromFtp(String sourceFileName) throws FtpTransportException {
+    public boolean downloadFileFromFtp(String ftpFolder, String fileName) {
+        boolean isDownloaded = false;
         try {
-            ftp = connect(sourceFtpDirectory);
-            downloadFile(ftp, sourceFileName, destinationFileName);
-        } finally {
+            ftp = connect(ftpFolder);
+            isDownloaded = downloadFile(ftp, fileName);
+            return isDownloaded;
+        } catch (IOException e) {
+            String message = String.format("Ошибка при получении файла с FTP: %s", e.getMessage());
+            System.out.println(message);
+            throw new FtpTransportException(e.getMessage(), message);
+        }
+         finally {
             if (ftp != null) {
                 close(ftp);
             }
         }
-        return true;
     }
 
     @Override
-    public boolean copyFileToFtp(String ftpDestinationDirectory, String sourceFilePath, String newFilename) throws FtpTransportException {
+    public boolean uploadFileToFtp(String ftpDestinationDirectory, String sourceFilePath, String newFilename) throws FtpTransportException {
         try {
             ftp = connect(ftpDestinationDirectory);
             ftp.storeFile(newFilename, new FileInputStream(sourceFilePath));
@@ -66,9 +72,8 @@ public class FtpTransporterImpl implements FtpTransporter {
         return true;
     }
 
-    private FTPClient connect(String subFolder) throws FtpTransportException {
+    private FTPClient connect(String subFolder) throws IOException {
         if (ftp == null || !ftp.isConnected()) {
-            try {
                 ftp = new FTPClient();
                 ftp.addProtocolCommandListener(new PrintCommandListener(new PrintWriter(System.out)));
                 ftp.connect(server, port);
@@ -85,21 +90,20 @@ public class FtpTransporterImpl implements FtpTransporter {
 
                 return ftp;
 
-            } catch (IOException e) {
-                throw new FtpTransportException(e.getMessage(), "Exception at connect to FTP-server");
-            }
         } else {
             return ftp;
         }
     }
 
-    private void downloadFile(FTPClient ftp, String sourceFileName, String destination) throws FtpTransportException {
-        try (FileOutputStream out = new FileOutputStream(destination);) {
-            ftp.retrieveFile(sourceFileName, out);
+    private boolean downloadFile(FTPClient ftp, String sourceFileName) {
+        boolean isSuccess = false;
+        try (FileOutputStream out = new FileOutputStream(sourceFileName);) {
+            isSuccess = ftp.retrieveFile(sourceFileName, out);
         } catch (IOException e) {
             throw new FtpTransportException(e.getMessage(), "Exception on downloading file from FTP-server");
         }
 
+        return isSuccess;
     }
 
 //    private void uploadFile(FTPClient ftp, String filePath) throws FtpGettingFileException {
