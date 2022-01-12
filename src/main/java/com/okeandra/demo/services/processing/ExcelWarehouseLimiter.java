@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
 import java.util.List;
 
 import com.okeandra.demo.models.ProcessResult;
@@ -22,10 +23,15 @@ public class ExcelWarehouseLimiter extends ExcelParser {
         StringBuilder log = new StringBuilder();
         int correctedItemsCount = 0;
 
+        LocalDate today = LocalDate.now();
+        LocalDate beginSpecialDateDutyFree = LocalDate.of(2021, 12, 28);
+        LocalDate beginSpecialDateDilis = LocalDate.of(2021, 12, 26);
+        LocalDate endSpecialDate = LocalDate.of(2022, 1, 10);
+
         String tmpFile = getTempFileName(xlsFileName);
 
         try (HSSFWorkbook excelBook = new HSSFWorkbook(new FileInputStream(xlsFileName));
-            FileOutputStream out = new FileOutputStream(tmpFile);) {
+             FileOutputStream out = new FileOutputStream(tmpFile);) {
             Sheet myExcelSheet = excelBook.getSheet("TDSheet");
             int lastRowIndex = myExcelSheet.getLastRowNum();
 
@@ -39,18 +45,51 @@ public class ExcelWarehouseLimiter extends ExcelParser {
 
                 try {
                     itemId = row.getCell(0).getStringCellValue();
+                    System.out.println(String.format("%s stock is ok : %s", itemId, itemName));
                     itemName = row.getCell(1).getStringCellValue();
                     vendor = row.getCell(3).getStringCellValue();
                 } catch (NullPointerException e) {
                     if (itemId == null) {
                         break;
                     }
-                    System.out.println(String.format("%s %s - NPE Exception. Stop parsing", itemId, itemName));
+                    System.out.println(String.format("%s %s - empty cell. Stop parsing", itemId, itemName));
                 }
 
                 int amountOkeandra = (int) row.getCell(15).getNumericCellValue();
                 int amountVendor = (int) row.getCell(16).getNumericCellValue();
 
+                {
+                    /** Первая версия ТЗ: В период с 29.12.21 по 9.01.22 мы можем отгружать парфюмерию только ту, что есть на нашем складе PL
+                     * поэтому обнуляем колонку количество на складе поставщика*/
+
+                    /**Вторая версия ТЗ: В период с 29.12.21 по 9.01.22 мы можем отгружать DutyFree только ту, что есть на нашем складе PL
+                     *                   В период с 27.12.21 по 9.01.22 мы можем отгружать   Dilis  только ту, что есть на нашем складе PL*/
+
+                    if (today.isAfter(beginSpecialDateDutyFree) & today.isBefore(endSpecialDate)) {
+                        if (vendor != null) {
+                            if (vendor.equals("Duty Free")) {
+                                amountVendor = 0;
+                                row.getCell(16).setCellValue(amountVendor);
+                                System.out.println(String.format("Новогоднее обнуление DutyFree на складе поставщика: %s %s", itemId, itemName));
+                            }
+                        }
+                    }
+
+                    if (today.isAfter(beginSpecialDateDilis) & today.isBefore(endSpecialDate)) {
+                        if (vendor != null) {
+                            if (vendor.equals("Dilis")) {
+                                amountVendor = 0;
+                                row.getCell(16).setCellValue(amountVendor);
+                                System.out.println(String.format("Новогоднее обнуление Dilis на складе поставщика: %s %s", itemId, itemName));
+                            }
+                        }
+                    }
+
+                    /** Конец блока новогоднего обнуления*/
+                }
+
+
+                //exceptionVendors - список исключений для обнуления остатка
                 if (!exceptionVendors.contains(vendor) && amountOkeandra <= okeandraLimit && amountVendor <= 0) {
 //                  Attention! Don't use shiftRows()!!! It has a mistake and crash outgoing xls file
 //                  myExcelSheet.shiftRows(i + 1, lastRowIndex-1, -1, false, false);

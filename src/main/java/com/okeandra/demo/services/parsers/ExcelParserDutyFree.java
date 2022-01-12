@@ -1,13 +1,10 @@
 package com.okeandra.demo.services.parsers;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import com.okeandra.demo.models.Item;
 import com.okeandra.demo.models.Warehouse;
@@ -19,21 +16,22 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 @Component
-@Qualifier("excelParser")
-public class ExcelParser {
-
+@Qualifier("excelParserDutyFree")
+public class ExcelParserDutyFree extends ExcelParser {
+    @Override
     public HashMap<Item, List<WarehouseItemCount>> getWarehouseStock(String xlsFileName) {
 
         Warehouse plLenina = new Warehouse("PL", "Ploshad_Lenina");
-        Warehouse didenkov = new Warehouse("Didenkov", "Sklad Didenkova");
+        Warehouse primeParfume = new Warehouse("primeParfum", "Sklad PrimeParfume");
 
-        HashMap<Item, List<WarehouseItemCount>> itemsOnWarehouse = new HashMap<>(10000);
+        HashMap<Item, List<WarehouseItemCount>> perfumesOnWarehouse = new HashMap<>(10000);
 
         try (HSSFWorkbook myExcelBook = new HSSFWorkbook(new FileInputStream(xlsFileName))) {
 
             HSSFSheet myExcelSheet = myExcelBook.getSheet("TDSheet");
             int rowTotal = myExcelSheet.getLastRowNum();
 
+            int countDutyFreeItems = 0;
             for (int i = 0; i < rowTotal; i++) {
                 try {
                     HSSFRow row = myExcelSheet.getRow(i);
@@ -46,44 +44,23 @@ public class ExcelParser {
 
                     List<WarehouseItemCount> warehouseItemCountList = new ArrayList<>();
                     warehouseItemCountList.add(new WarehouseItemCount(plLenina, warehouseCount1));
-                    warehouseItemCountList.add(new WarehouseItemCount(didenkov, warehouseCount2));
+                    warehouseItemCountList.add(new WarehouseItemCount(primeParfume, warehouseCount2));
 
-                    itemsOnWarehouse.put(item, warehouseItemCountList);
+                    String folder = row.getCell(3).getStringCellValue();
+                    if (folder.equals("Duty Free")) {
+                        System.out.println(++countDutyFreeItems + ") " + itemId + " " + itemName);
+                        perfumesOnWarehouse.put(item, warehouseItemCountList);
+                    }
 
                 } catch (NullPointerException e) {
                     //TODO
-                    System.out.println("NPE - ExcelParser.class");
+                    System.out.println("NPE - ExcelParserDutyFree.class");
                 }
             }
 
         } catch (IOException e) {
             System.out.println("I/O exception");
         }
-        return itemsOnWarehouse;
-    }
-
-    public Set<String> getItems(String xlsFileName) {
-        Set<String> items = new HashSet<>(10000);
-        try (HSSFWorkbook myExcelBook = new HSSFWorkbook(new FileInputStream(xlsFileName))) {
-
-            HSSFSheet myExcelSheet = myExcelBook.getSheet("TDSheet");
-            int rowTotal = myExcelSheet.getLastRowNum();
-
-            for (int i = 0; i < rowTotal; i++) {
-                try {
-                    HSSFRow row = myExcelSheet.getRow(i);
-                    String itemId = row.getCell(0).getStringCellValue();
-                    items.add(itemId);
-
-                } catch (NullPointerException e) {
-                    //TODO
-                    System.out.println("NPE");
-                }
-            }
-
-        } catch (IOException e) {
-            System.out.println("I/O exception");
-        }
-        return items;
+        return perfumesOnWarehouse;
     }
 }

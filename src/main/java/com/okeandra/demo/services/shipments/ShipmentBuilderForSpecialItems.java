@@ -27,6 +27,10 @@ public class ShipmentBuilderForSpecialItems implements ShipmentBuilder {
         setShipmentsForProfCosmetic();
     }
 
+    public void addShipmentOptionsAllItemsZeroDayKapousOllinOneDay() {
+        setShipmentsZeroDayForAllItemsKapousOllinOneDay();
+    }
+
     private void setShipmentsForSpecialItems() {
         List<Offer> offers = yml.getBody();
 
@@ -47,7 +51,7 @@ public class ShipmentBuilderForSpecialItems implements ShipmentBuilder {
             if (offer.getVendor() != null) {
                 if (offer.getVendor().equals("Duty Free")) {
                     offer.setDays(4);
-                    offer.setOrderBefore("01:00");
+                    offer.setOrderBefore("07:00");
                 }
             }
         }
@@ -60,7 +64,20 @@ public class ShipmentBuilderForSpecialItems implements ShipmentBuilder {
             if (offer.getVendor() != null) {
                 if (offer.getVendor().equals("Kapous") || offer.getVendor().equals("Ollin Professional")) {
                     offer.setDays(2);
-                    offer.setOrderBefore("01:00");
+                    offer.setOrderBefore("07:00");
+                }
+            }
+        }
+    }
+
+    private void setShipmentsZeroDayForAllItemsKapousOllinOneDay() {
+        List<Offer> offers = yml.getBody();
+        for (Offer offer : offers) {
+            if (offer.getVendor() != null) {
+                if (offer.getVendor().equals("Kapous") || offer.getVendor().equals("Ollin Professional")) {
+                    offer.setDays(1);
+                } else {
+                    offer.setDays(0);
                 }
             }
         }

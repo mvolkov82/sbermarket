@@ -76,6 +76,7 @@ public class InsalesFeed implements Processing {
                 isResultFileUploaded = true;
             } catch (FtpTransportException e) {
                 System.out.println(e.getMessage());
+                System.out.println("Ошибка при отправке файла на FTP: " + e.getMessage());
             }
         }
 

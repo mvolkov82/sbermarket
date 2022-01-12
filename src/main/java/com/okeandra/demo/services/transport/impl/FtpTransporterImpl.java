@@ -12,9 +12,11 @@ import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 @Component
+@Scope("prototype")
 public class FtpTransporterImpl implements FtpTransporter {
 
     private FTPClient ftp = null;
@@ -34,9 +36,6 @@ public class FtpTransporterImpl implements FtpTransporter {
     @Value("${ftp.xls.source.directory}")
     private String sourceFtpDirectory;
 
-//    @Value("${ftp.xls.source.file}")
-//    private String destinationFileName;
-
 
     @Override
     public boolean downloadFileFromFtp(String ftpFolder, String fileName) {
@@ -49,8 +48,7 @@ public class FtpTransporterImpl implements FtpTransporter {
             String message = String.format("Ошибка при получении файла с FTP: %s", e.getMessage());
             System.out.println(message);
             throw new FtpTransportException(e.getMessage(), message);
-        }
-         finally {
+        } finally {
             if (ftp != null) {
                 close(ftp);
             }
@@ -72,26 +70,67 @@ public class FtpTransporterImpl implements FtpTransporter {
         return true;
     }
 
-    private FTPClient connect(String subFolder) throws IOException {
-        if (ftp == null || !ftp.isConnected()) {
-                ftp = new FTPClient();
-                ftp.addProtocolCommandListener(new PrintCommandListener(new PrintWriter(System.out)));
-                ftp.connect(server, port);
-                int reply = ftp.getReplyCode();
+//    public FTPClient connect(String subFolder) throws IOException {
+//        if (ftp == null || !ftp.isConnected()) {
+//            ftp = new FTPClient();
+//            ftp.addProtocolCommandListener(new PrintCommandListener(new PrintWriter(System.out)));
+//            ftp.connect(server, port);
+//            int reply = ftp.getReplyCode();
+//
+//            if (!FTPReply.isPositiveCompletion(reply)) {
+//                ftp.disconnect();
+//                throw new IOException("Exception in connecting to FTP Server");
+//            }
+//            ftp.login(user, password);
+//            ftp.enterLocalPassiveMode();
+//            ftp.setFileType(FTP.BINARY_FILE_TYPE);
+//            ftp.changeWorkingDirectory(subFolder);
+//
+//            return ftp;
+//        } else {
+//            goToRootFtpDirectory(ftp);
+//            ftp.changeWorkingDirectory(subFolder);
+//            return ftp;
+//        }
+//    }
 
-                if (!FTPReply.isPositiveCompletion(reply)) {
-                    ftp.disconnect();
-                    throw new IOException("Exception in connecting to FTP Server");
-                }
-                ftp.login(user, password);
-                ftp.enterLocalPassiveMode();
-                ftp.setFileType(FTP.BINARY_FILE_TYPE);
-                ftp.changeWorkingDirectory(subFolder);
+    //Try to write thread save
+    public synchronized FTPClient connect(String subFolder) throws IOException {
+//        if (ftp == null || !ftp.isConnected()) {
+            ftp = new FTPClient();
+            ftp.addProtocolCommandListener(new PrintCommandListener(new PrintWriter(System.out)));
+            ftp.connect(server, port);
+            int reply = ftp.getReplyCode();
 
-                return ftp;
+            if (!FTPReply.isPositiveCompletion(reply)) {
+                ftp.disconnect();
+                throw new IOException("Exception in connecting to FTP Server");
+            } else {
+            ftp.login(user, password);
+            ftp.enterLocalPassiveMode();
+            ftp.setFileType(FTP.BINARY_FILE_TYPE);
+            ftp.changeWorkingDirectory(subFolder);
 
-        } else {
             return ftp;
+            }
+//        } else {
+//            goToRootFtpDirectory(ftp);
+//            ftp.changeWorkingDirectory(subFolder);
+//            return ftp;
+//        }
+    }
+
+    private void goToRootFtpDirectory(FTPClient ftp) {
+        while (true) {
+            try {
+                if (ftp.printWorkingDirectory().equals("/")) {
+                    break;
+                } else {
+                    ftp.changeToParentDirectory();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -105,14 +144,6 @@ public class FtpTransporterImpl implements FtpTransporter {
 
         return isSuccess;
     }
-
-//    private void uploadFile(FTPClient ftp, String filePath) throws FtpGettingFileException {
-//        try {
-//            ftp.storeFile("result_finished.xml", new FileInputStream(filePath));
-//        } catch (IOException e) {
-//            throw new FtpGettingFileException(e.getMessage(), "Exception on uploading file from FTP-server");
-//        }
-//    }
 
     private void close(FTPClient ftp) {
         try {

@@ -4,11 +4,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.okeandra.demo.exceptions.FtpTransportException;
+import com.okeandra.demo.models.Item;
+import com.okeandra.demo.models.WarehouseItemCount;
 import com.okeandra.demo.models.YmlObject;
 import com.okeandra.demo.services.creators.XmlFinalCreator;
+import com.okeandra.demo.services.parsers.ExcelParser;
 import com.okeandra.demo.services.shipments.ShipmentBuilderForSpecialItems;
 import com.okeandra.demo.services.transport.FromFileReader;
 import com.okeandra.demo.services.transport.impl.FtpTransporterImpl;
@@ -20,12 +24,13 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 
 @Service
-public class SberFeed implements Processing {
+public class SberFeedAll0DayKapousOllinOneDay implements Processing {
     private XmlTransporterImpl xmlTransporter;
     private FromFileReader fileReader;
     private FtpTransporterImpl ftp;
     private XmlFinalCreator xmlFinalCreator;
     private ResourceLoader resourceLoader;
+    private ExcelParser excelParser;
 
     @Value("${xml.source.url}")
     private String xmlSourceUrl;
@@ -39,34 +44,42 @@ public class SberFeed implements Processing {
     @Value("${ftp.xml.destination.directory}")
     private String ftpSberDirectory;
 
-    @Autowired
-    public SberFeed(XmlTransporterImpl xmlTransporter, FromFileReader fileReader, FtpTransporterImpl ftp, XmlFinalCreator xmlFinalCreator, ResourceLoader resourceLoader) {
+    @Value("${ftp.xls.source.file}")
+    private String xlsSourceFile;
+
+    @Value("${ftp.xls.source.directory}")
+    private String xlsSourceFtpFolder;
+
+    public SberFeedAll0DayKapousOllinOneDay(XmlTransporterImpl xmlTransporter, FromFileReader fileReader, FtpTransporterImpl ftp, XmlFinalCreator xmlFinalCreator, ResourceLoader resourceLoader, ExcelParser excelParser) {
         this.xmlTransporter = xmlTransporter;
         this.fileReader = fileReader;
         this.ftp = ftp;
         this.xmlFinalCreator = xmlFinalCreator;
         this.resourceLoader = resourceLoader;
+        this.excelParser = excelParser;
     }
 
     @Override
     public List<String> start() {
         List<String> resultText = new ArrayList<>();
-        Set<String> dayPerDayItemsSet = new LinkedHashSet<>();
+//        Set<String> dayPerDayItemsSet = new LinkedHashSet<>();
 
         //Скачиваем XML фид и кладем его в root
         Resource resourceXmlFile = resourceLoader.getResource("classpath:" + getFilenameFromPath(xmlSourceUrl));
 
         ///Скачиваем TXT-файл dayperday.txt и кладем его в root
-        boolean isDayPerDayDownloaded = false;
-
+        //Из-за непоняток по срокам игнорируем dayperday и ставим 0 дней на все кроме олин капус дьюти фри (которые не в наличии)
+        boolean isDayPerDayDownloaded = true;
+/*
             isDayPerDayDownloaded = ftp.downloadFileFromFtp(ftpSberDirectory, dayPerDayItemsFile);
             if (!isDayPerDayDownloaded){
                 String message = String.format("Ошибка при скачивании файла %s из FTP: %s.", dayPerDayItemsFile, ftpSberDirectory);
                 System.out.println(message);
                 resultText.add(message);
-            }
+            }*/
 
-        boolean isDayPerDayParsed = false;
+        boolean isDayPerDayParsed = true;
+        /*
         if (isDayPerDayDownloaded) {
 
             try {
@@ -79,7 +92,9 @@ public class SberFeed implements Processing {
                 resultText.add(message);
                 System.out.println(message);
             }
-        }
+        } */
+
+
 
         boolean isYmlReceipted = false;
         if (isDayPerDayParsed) {
@@ -99,10 +114,23 @@ public class SberFeed implements Processing {
             YmlObject yml = YmlObject.getYmlObjectOnlyForSpecialItems(resourceXmlFile.getFilename());
             resultText.add("Парсинг YML файла прошел успешно");
 
-            //TODO
-            ShipmentBuilderForSpecialItems shipmentBuilder = new ShipmentBuilderForSpecialItems(yml, 0, "07:00", dayPerDayItemsSet);
-            shipmentBuilder.addShipmentOptions();
-            resultText.add("Настроены сроки отгрузок (Kapous, Ollin : 2 дня, DutyFree : 4)");
+            //Скачиваем XLS c FTP и кладем в заданную в настройках папку
+            boolean isXlsSourceCopied = false;
+            boolean isDangerLimitFixed = false;
+            boolean isResultFileUploaded = false;
+            try {
+                isXlsSourceCopied = ftp.downloadFileFromFtp(xlsSourceFtpFolder, xlsSourceFile);
+                resultText.add("Файл " + xlsSourceFile + " скопирован с FTP");
+            } catch (FtpTransportException e) {
+                resultText.add("Ошибка при копировании файла " + xlsSourceFile + " с FTP. Ошибка: " + e.getMessage());
+            }
+
+            Set<String> allItemsAsDayPerDay = excelParser.getItems(xlsSourceFile);
+
+
+            ShipmentBuilderForSpecialItems shipmentBuilder = new ShipmentBuilderForSpecialItems(yml, 0, "07:00", allItemsAsDayPerDay);
+            shipmentBuilder.addShipmentOptionsAllItemsZeroDayKapousOllinOneDay();
+            resultText.add("Настроены сроки отгрузок (Все товары: 0 дней. Kapous, Ollin : 1 день)");
 
             //Превращаем YMLObject снова в XML и сохраняем его.
             xmlFinalCreator.saveXmlFile(finishedFeedForSberMarket, yml);

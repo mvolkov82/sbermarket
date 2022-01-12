@@ -1,0 +1,43 @@
+В фиде не должно быть посторонних тегов. Использовать только те, которые описаны в инструкции
+Если в фиде товар которого нет в ЛК при импорте будет сообщение об ошибках. Тем не менее остальной товар обновляется.
+
+Сначала нужно получить список товаров которые есть в ЛК:
+- Товары - Список товаров - кнопка Скачать товары - Товары CSV - скачивается файл prodicts.csv
+
+- На фронте сделать возможность отправки файла с ПК на FTP папку ozon.
+
+- С FTP ozon забираем файл products.csv и парсим его артикула в Map ozonItems <String(id) , String (name ozon)>
+
+(- Парсим файл 1CItems_feed.xls классом ExcelParserOzon получая на выходе Map excelWarehouse<String, List<WarehouseItemCount>>)
+
+- Парсим 1CItems_feed.xls классом ExcelParserOzon получая на выходе Map excelOffers <String, Offer>. Создавая offer inStock = остаток PL.
+
+(- Создаем List<Offer> offersForOzon;)
+
+- пробегаем по всем ozonItems, берем артикул, ищем его в excelOffers.
+    Если в excelOffers такой артикул представлен - добавляем его в List<Offer> offersForOzon
+	Если в excelOffers такой артикул НЕ представлен, значит надо его обнулить в озоне:
+	    - Создаем new Offer id = ozonItemsId, price = 0, instock = 0.
+	    - Добавляем новый offer в List<Offer> offersForOzon
+
+- Создаем YmlObject:
+
+Создание нового xml:
+1. Создаем заголовок:
+String headerContent = 
+<yml_catalog date="2022-01-11 08:50">
+<shop>
+<offers>
+
+2. Создаем подвал
+String footerContent;
+</offers>
+</shop>
+</yml_catalog>
+
+3. Создаем через конструктор new YmlObject(headerContent,   offersForOzon,   footerContent);
+
+- Передаем в класс XmlOzonCreator имя файла OzonFeed.xml и YmlObject для создания готового фида.
+
+- OzonFeed.xml отправляем на FTP в папку Ozon
+

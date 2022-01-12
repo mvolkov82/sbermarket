@@ -1,7 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <title>SberMegaMarket feed processing</title>
 
     <style>
@@ -11,6 +14,11 @@
             height: 100%;
             font-family: Calibri;
             color: white;
+        }
+
+        .date-info {
+            font-size: smaller;
+
         }
 
         .todo {
@@ -117,20 +125,31 @@
             <div class="todo-card" id="card-1">
                 <li> Okeandra - обработка 1СItems.xls: установка безопасного остатка.
                     <button class="todo-button todo-button-add" id="button-start-okeandra" onclick=startCreatingFeedOkeandra()>
-                        Insales
-                    </button>
-            </div>
-            <div class="todo-card" id="card-2">
-                <li>Сбер - Duty Free - подготовка фида для Duty Free из наличия на Площади <br>
-                    <button class="todo-button todo-button-add" id="button-start-sber-duty-free" onclick=startCreatingFeedDutyFree()>
-                        Duty Free
+                        Okeandra
                     </button>
             </div>
             <div class="todo-card" id="card-3">
-                <li>СберМегаМаркет - подготовка фида: установка срока "день в день" для избранных товаров.</li>
-                <button class="todo-button todo-button-delete" id="button-start-sber"  onclick=startCreatingFeedSber()>
-                    День в день
+                <li>СберМегаМаркет - подготовка фида со сроками сборки</li>
+                <button class="todo-button todo-button-add" id="button-start-sber"  onclick=startCreatingFeedSber()>
+                    СберМаркет
                 </button>
+            </div>
+            <div class="todo-card" id="card-2">
+                <li>Сбер - Duty Free <br>
+                    (срок отгрузки: с площади 0 дней, если у поставщика: 2 дня) <br>
+                    <button class="todo-button todo-button-add" id="button-start-sber-duty-free" onclick=startCreatingFeedDutyFree()>
+                        Duty Free
+                    </button>
+                <br><br><br>
+                Чтобы обновить остатки Duty Free из 1С:
+                    <li> делаем выгрузку из 1С
+                    <li> прожать "Okeandra" -> "СберМаркет" -> "Duty Free"<br>
+                <br>
+                Чтобы срочно добавить новый товар:
+                <li> выгрузка из 1С
+                <li> прожать "Okeandra" -> "СберМаркет"
+                <li> импортируем в админку <a href="https://cw52673.tmweb.ru/okeandra/1CItems_feed.xls">этот файл</a>
+                <li> после завершения загрузки прожать "Duty Free".
             </div>
             <div class="todo-card" id="card-4">
                 <li>Отгрузка со Сбера - подготовка фида для отгрузки со склада Сбера.</li>
@@ -143,19 +162,18 @@
         <div><h3>Файлы</h3></div>
         <div class="todo-list">
             <div class="todo-card" id="card-download">
-                <div>Выгрузка из 1С -> <a href="https://cw52673.tmweb.ru/1CItems.xls">1CItems.xls</a></div>
-                <div>Выгрузка из 1С + лимиты -> <a href="https://cw52673.tmweb.ru/okeandra/1CItems_feed.xls">1CItems_feed.xls</a>
-                </div>
+                <div>Выгрузка из 1С -> <a th:href="@{'https://cw52673.tmweb.ru/1CItems.xls?' + ${randomVal}}">1CItems.xls</a> <span class="date-info" id="source_1CItems_xls_date"></span></div>
+                <div>Выгрузка из 1С + лимиты -> <a th:href="@{'https://cw52673.tmweb.ru/okeandra/1CItems_feed.xls?' + ${randomVal}}">1CItems_feed.xls</a> <span class="date-info" id="limitedFeedDate"></span></div>
                 <div><br></div>
-                <div>Insales фид (основные товары)-> <a href="https://okeandra.ru/marketplace/79749.xml" target="_blank">79749.xml</a>
-                <div>Insales фид (DutyFree) -> <a href="https://okeandra.ru/marketplace/84930.xml" target="_blank">84930.xml</a>
-                <div>Фид для СберМегаМаркета -> <a href="https://cw52673.tmweb.ru/sbermegamarket/resultDeliveryFromOkeandra.xml" target="_blank">resultDeliveryFromOkeandra.xml</a>
-                <div>Фид для СберМегаМаркета (Duty Free) -> <a href="https://cw52673.tmweb.ru/sbermegamarket/SberDutyFree.xml" target="_blank">SberDutyFree.xml</a>
+                <div>Insales фид (основные товары)-> <a th:href="@{'https://okeandra.ru/marketplace/79749.xml?'+${randomVal}}" target="_blank">79749.xml</a></div>
+                <div>Insales фид (DutyFree) -> <a th:href="@{'https://okeandra.ru/marketplace/84930.xml?'+${randomVal}}" target="_blank">84930.xml</a>
+                    <div>Фид СберМегаМаркета -> <a th:href="@{'https://cw52673.tmweb.ru/sbermegamarket/resultDeliveryFromOkeandra.xml?'+${randomVal}}" target="_blank">resultDeliveryFromOkeandra.xml</a> <span class="date-info" id="basicFeedForSberDate"></span></div>
+                    <div>Фид СберМегаМаркета (Duty Free) -> <a th:href="@{'https://cw52673.tmweb.ru/sbermegamarket/SberDutyFree.xml?' + ${randomVal}}" target="_blank">SberDutyFree.xml</a> <span class="date-info" id="dutyFreeFeedForSberDate"></span></div>
                 </div>
-                <div>Товары отгружаемые "день в день" -> <a href="https://cw52673.tmweb.ru/sbermegamarket/dayperday.txt" target="_blank">dayperday.txt</a></div>
+                <div>Товары отгружаемые "день в день" -> <a th:href="@{'https://cw52673.tmweb.ru/sbermegamarket/dayperday.txt?' + ${randomVal}}" target="_blank">dayperday.txt</a>  <span class="date-info" id="dayPerDayFileDate"></span></div>
                 <div><br></div>
-                <div>Фид для товаров отгружаемых со склада Сбера -> <a href="https://cw52673.tmweb.ru/sbermegamarket/resultDeliveryFromSberWarehouse.xml" target="_blank">xml</a></div>
-                <div>Список товаров отгружаемых со склада Сбера -> <a href="https://cw52673.tmweb.ru/sbermegamarket/SberItems.txt" target="_blank">SberItems.txt</a></div>
+                <div>Фид для товаров отгружаемых со склада Сбера -> <a th:href="@{'https://cw52673.tmweb.ru/sbermegamarket/resultDeliveryFromSberWarehouse.xml?' + ${randomVal}} " target="_blank">xml</a>  <span class="date-info" id="shipmentFromSberWarehouseFeedDate"></span></div>
+                <div>Товары отгружаемые со склада Сбера -> <a th:href="@{'https://cw52673.tmweb.ru/sbermegamarket/SberItems.txt?' + ${randomVal}}" target="_blank">SberItems.txt</a>  <span class="date-info" id="itemsFromSberWarehouseFileDate"></span></div>
             </div>
         </div>
     </div>
@@ -178,5 +196,40 @@
     function startCreatingFeedSberFromSber() {
         window.location = '/create-sber-from-sber';
     }
+</script>
+
+<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+<script>
+    $(window).on("load", function () { // When HTML DOM "click" event is invoked on element with ID "somebutton", execute the following function...
+        $.get("/query/1",
+            function (responseText) {   // Execute Ajax GET request on URL of "someservlet" and execute the following function with Ajax response text...
+                $("#source_1CItems_xls_date").text(responseText);           // Locate HTML DOM element with ID "somediv" and set its text content with the response text.
+            }
+        );
+
+        $.get("/query/2", function (responseText) {   // Execute Ajax GET request on URL of "someservlet" and execute the following function with Ajax response text...
+            $("#limitedFeedDate").text(responseText);           // Locate HTML DOM element with ID "somediv" and set its text content with the response text.
+        });
+
+        $.get("/query/3", function (responseText) {   // Execute Ajax GET request on URL of "someservlet" and execute the following function with Ajax response text...
+            $("#basicFeedForSberDate").text(responseText);           // Locate HTML DOM element with ID "somediv" and set its text content with the response text.
+        });
+
+        $.get("/query/4", function (responseText) {   // Execute Ajax GET request on URL of "someservlet" and execute the following function with Ajax response text...
+            $("#dutyFreeFeedForSberDate").text(responseText);           // Locate HTML DOM element with ID "somediv" and set its text content with the response text.
+        });
+
+        $.get("/query/5", function (responseText) {   // Execute Ajax GET request on URL of "someservlet" and execute the following function with Ajax response text...
+            $("#dayPerDayFileDate").text(responseText);           // Locate HTML DOM element with ID "somediv" and set its text content with the response text.
+        });
+
+        $.get("/query/6", function (responseText) {   // Execute Ajax GET request on URL of "someservlet" and execute the following function with Ajax response text...
+            $("#shipmentFromSberWarehouseFeedDate").text(responseText);           // Locate HTML DOM element with ID "somediv" and set its text content with the response text.
+        });
+
+        $.get("/query/7", function (responseText) {   // Execute Ajax GET request on URL of "someservlet" and execute the following function with Ajax response text...
+            $("#itemsFromSberWarehouseFileDate").text(responseText);           // Locate HTML DOM element with ID "somediv" and set its text content with the response text.
+        });
+    });
 </script>
 </html>
