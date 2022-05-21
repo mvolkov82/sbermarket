@@ -16,6 +16,14 @@ public class Offer {
     private Integer days;
     private String orderBefore;
 
+    //Доп поля из Excel
+    private String rootCategory;
+    private String naznachenie;
+    private String vidProduc;
+    private String recommendedAge;
+
+
+
     public Integer getDays() {
         return days;
     }
@@ -126,6 +134,38 @@ public class Offer {
 
     public void setOutletId(String outletId) {
         this.outletId = outletId;
+    }
+
+    public String getRootCategory() {
+        return rootCategory;
+    }
+
+    public void setRootCategory(String rootCategory) {
+        this.rootCategory = rootCategory;
+    }
+
+    public String getNaznachenie() {
+        return naznachenie;
+    }
+
+    public void setNaznachenie(String naznachenie) {
+        this.naznachenie = naznachenie;
+    }
+
+    public String getVidProduc() {
+        return vidProduc;
+    }
+
+    public void setVidProduc(String vidProduc) {
+        this.vidProduc = vidProduc;
+    }
+
+    public String getRecommendedAge() {
+        return recommendedAge;
+    }
+
+    public void setRecommendedAge(String recommendedAge) {
+        this.recommendedAge = recommendedAge;
     }
 
     @Override

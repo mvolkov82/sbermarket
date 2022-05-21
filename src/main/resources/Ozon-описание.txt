@@ -8,11 +8,7 @@
 
 - С FTP ozon забираем файл products.csv и парсим его артикула в Map ozonItems <String(id) , String (name ozon)>
 
-(- Парсим файл 1CItems_feed.xls классом ExcelParserOzon получая на выходе Map excelWarehouse<String, List<WarehouseItemCount>>)
-
 - Парсим 1CItems_feed.xls классом ExcelParserOzon получая на выходе Map excelOffers <String, Offer>. Создавая offer inStock = остаток PL.
-
-(- Создаем List<Offer> offersForOzon;)
 
 - пробегаем по всем ozonItems, берем артикул, ищем его в excelOffers.
     Если в excelOffers такой артикул представлен - добавляем его в List<Offer> offersForOzon
@@ -41,3 +37,11 @@ String footerContent;
 
 - OzonFeed.xml отправляем на FTP в папку Ozon
 
+
+Пример оффера:
+<offer id="PT-00009337">
+<price>450</price>
+<outlets>
+<outlet instock="23"/>
+</outlets>
+</offer>

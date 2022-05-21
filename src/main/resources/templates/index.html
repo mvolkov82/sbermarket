@@ -151,6 +151,34 @@
                 <li> импортируем в админку <a href="https://cw52673.tmweb.ru/okeandra/1CItems_feed.xls">этот файл</a>
                 <li> после завершения загрузки прожать "Duty Free".
             </div>
+
+            <div class="todo-card" id="card-4">
+                <li>Отгрузка для GroupPrice.</li>
+                <button class="todo-button todo-button-add" id="button-sber-from-sber"
+                        onclick=startCreatingFeedGroupPrice()> GroupPrice
+                </button>
+            </div>
+
+
+            <div class="todo-card" id="card-22">
+                <li>Ozon - обновление фида.<br>
+                    <br>
+                    <button class="todo-button todo-button-add" id="button-start-ozon" onclick=startCreatingOzon()>
+                        Ozon
+                    </button>
+                    <br><br>
+                    <div>
+                        При добавлении в Ozon новых товаров - скачать обновленый ассортимент: <br>
+                        В ЛК: Товары-<a href="https://seller.ozon.ru/app/products" target="_blank">Список товаров</a> кн. Скачать товары - Товары CSV - prodicts.csv
+                        <br>
+                        и загрузить скаченный файл prodicts.csv сюда: <br><br>
+                        <form method="POST" action="/upload-ozon-items" enctype="multipart/form-data">
+                            <input type="file" name="file" />
+                            <input type="submit" value="Загрузить" />
+                        </form>
+                    </div>
+            </div>
+
             <div class="todo-card" id="card-4">
                 <li>Отгрузка со Сбера - подготовка фида для отгрузки со склада Сбера.</li>
                 <button class="todo-button todo-button-delete" id="button-sber-from-sber"
@@ -171,10 +199,12 @@
                     <div>Фид СберМегаМаркета (Duty Free) -> <a th:href="@{'https://cw52673.tmweb.ru/sbermegamarket/SberDutyFree.xml?' + ${randomVal}}" target="_blank">SberDutyFree.xml</a> <span class="date-info" id="dutyFreeFeedForSberDate"></span></div>
                 </div>
                 <div>Товары отгружаемые "день в день" -> <a th:href="@{'https://cw52673.tmweb.ru/sbermegamarket/dayperday.txt?' + ${randomVal}}" target="_blank">dayperday.txt</a>  <span class="date-info" id="dayPerDayFileDate"></span></div>
-                <div><br></div>
+                <br>
+                <div>Озон ассортимент -> <a th:href="@{'https://cw52673.tmweb.ru/ozon/products.csv?' + ${randomVal}}" target="_blank">products.csv</a> <span class="date-info" id="ozonProducts"></span></div>
+                <div>Озон фид -> <a th:href="@{'https://cw52673.tmweb.ru/ozon/ozon_feed.xml?' + ${randomVal}}" target="_blank">ozon_feed.xml</a> <span class="date-info" id="ozonFeed"></span></div>
+                <br>
                 <div>Фид для товаров отгружаемых со склада Сбера -> <a th:href="@{'https://cw52673.tmweb.ru/sbermegamarket/resultDeliveryFromSberWarehouse.xml?' + ${randomVal}} " target="_blank">xml</a>  <span class="date-info" id="shipmentFromSberWarehouseFeedDate"></span></div>
                 <div>Товары отгружаемые со склада Сбера -> <a th:href="@{'https://cw52673.tmweb.ru/sbermegamarket/SberItems.txt?' + ${randomVal}}" target="_blank">SberItems.txt</a>  <span class="date-info" id="itemsFromSberWarehouseFileDate"></span></div>
-            </div>
         </div>
     </div>
 
@@ -193,9 +223,20 @@
         window.location = '/create-feed-sber';
     }
 
+    function startCreatingOzon() {
+        window.location = '/create-ozon-feed';
+    }
+
     function startCreatingFeedSberFromSber() {
         window.location = '/create-sber-from-sber';
     }
+
+    function startCreatingFeedGroupPrice() {
+        window.location = '/create-groupprice';
+    }
+
+
+
 </script>
 
 <script src="http://code.jquery.com/jquery-latest.min.js"></script>
@@ -229,6 +270,14 @@
 
         $.get("/query/7", function (responseText) {   // Execute Ajax GET request on URL of "someservlet" and execute the following function with Ajax response text...
             $("#itemsFromSberWarehouseFileDate").text(responseText);           // Locate HTML DOM element with ID "somediv" and set its text content with the response text.
+        });
+
+        $.get("/query/ozon1", function (responseText) {   // Execute Ajax GET request on URL of "someservlet" and execute the following function with Ajax response text...
+            $("#ozonProducts").text(responseText);           // Locate HTML DOM element with ID "somediv" and set its text content with the response text.
+        });
+
+        $.get("/query/ozon2", function (responseText) {   // Execute Ajax GET request on URL of "someservlet" and execute the following function with Ajax response text...
+            $("#ozonFeed").text(responseText);           // Locate HTML DOM element with ID "somediv" and set its text content with the response text.
         });
     });
 </script>

@@ -20,6 +20,7 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 
 @Service
+// ---------------DEPRECATED-----------
 public class SberFeed implements Processing {
     private XmlTransporterImpl xmlTransporter;
     private FromFileReader fileReader;

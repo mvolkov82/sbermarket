@@ -106,4 +106,16 @@ public class RestController {
         System.out.println("/query/7 itemsFromSberWarehouseFileDate=" + itemsFromSberWarehouseFileDate);
         return itemsFromSberWarehouseFileDate;
     }
+
+    @GetMapping("/query/ozon1")
+    public String ajaxOzon1() {
+        String ozonProductsFileDate = fileInfoService.getOzonProductsFileDate();
+        return ozonProductsFileDate;
+    }
+
+    @GetMapping("/query/ozon2")
+    public String ajaxOzon2() {
+        String ozonFeedFileDate = fileInfoService.getOzonFeedFileDate();
+        return ozonFeedFileDate;
+    }
 }

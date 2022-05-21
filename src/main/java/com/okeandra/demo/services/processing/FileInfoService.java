@@ -38,6 +38,12 @@ public class FileInfoService {
     private String shipmentFromSberWarehouseFeed;
     @Value("${items.sberwarehouse}")
     private String itemsShipmentFormSberWarehouseFile;
+    @Value("${ftp.ozon.directory}")
+    private String ozonFtpFolder;
+    @Value("${ozon.items.file}")
+    private String ozonItemsFile;
+    @Value("${ozon.feed.file}")
+    private String ozonFeedFile;
 
 
     private FtpTransporterImpl ftpTransporter;
@@ -73,6 +79,14 @@ public class FileInfoService {
 
     public String getItemsShipmentFormSberWarehouseFileDate() {
         return (getFileLastUpdateInfo(sberFtpFolder, itemsShipmentFormSberWarehouseFile));
+    }
+
+    public String getOzonProductsFileDate() {
+        return (getFileLastUpdateInfo(ozonFtpFolder, ozonItemsFile));
+    }
+
+    public String getOzonFeedFileDate() {
+        return (getFileLastUpdateInfo(ozonFtpFolder, ozonFeedFile));
     }
 
     private String getFileLastUpdateInfo(String ftpFolder, String fileName) {

@@ -1,19 +1,19 @@
 package com.okeandra.demo.models;
 
-public class ExcelObject {
+public class ExcelProperties {
     private String itemId;
     private String itemName;
-    private Float weight;
+    private Double weight;
     private String vendor;
     private String lineName;
     private String empty6;
     private String pictureUrl;
-    private int price;
-    private int priceOld;
+    private Double price;
+    private Double priceOld;
     private String rootCategory;
     private String naznachenie;
     private String vidProduc;
-    private String recomendedAge;
+    private String recommendedAge;
     private String urlName;
     private String fullDescription;
     private int ploshadStock;
@@ -25,12 +25,21 @@ public class ExcelObject {
     private int ozonPrice;
     private int wildberriesPrice;
     private int sberMegeMarketPrice;
+    private int groupPricePrice;
 
-    public ExcelObject(String itemId) {
+    public int getGroupPricePrice() {
+        return groupPricePrice;
+    }
+
+    public void setGroupPricePrice(int groupPricePrice) {
+        this.groupPricePrice = groupPricePrice;
+    }
+
+    public ExcelProperties(String itemId) {
         this.itemId = itemId;
     }
 
-    public ExcelObject() {
+    public ExcelProperties() {
     }
 
     public String getItemId() {
@@ -49,11 +58,11 @@ public class ExcelObject {
         this.itemName = itemName;
     }
 
-    public Float getWeight() {
+    public Double getWeight() {
         return weight;
     }
 
-    public void setWeight(Float weight) {
+    public void setWeight(Double weight) {
         this.weight = weight;
     }
 
@@ -89,19 +98,19 @@ public class ExcelObject {
         this.pictureUrl = pictureUrl;
     }
 
-    public int getPrice() {
+    public Double getPrice() {
         return price;
     }
 
-    public void setPrice(int price) {
+    public void setPrice(Double price) {
         this.price = price;
     }
 
-    public int getPriceOld() {
+    public Double getPriceOld() {
         return priceOld;
     }
 
-    public void setPriceOld(int priceOld) {
+    public void setPriceOld(Double priceOld) {
         this.priceOld = priceOld;
     }
 
@@ -129,12 +138,12 @@ public class ExcelObject {
         this.vidProduc = vidProduc;
     }
 
-    public String getRecomendedAge() {
-        return recomendedAge;
+    public String getRecommendedAge() {
+        return recommendedAge;
     }
 
-    public void setRecomendedAge(String recomendedAge) {
-        this.recomendedAge = recomendedAge;
+    public void setRecommendedAge(String recommendedAge) {
+        this.recommendedAge = recommendedAge;
     }
 
     public String getUrlName() {

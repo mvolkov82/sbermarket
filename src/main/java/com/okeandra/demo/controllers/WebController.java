@@ -1,82 +1,45 @@
 package com.okeandra.demo.controllers;
 
 import java.util.List;
+import java.util.Properties;
 import java.util.Random;
 
-import com.okeandra.demo.services.processing.FileInfoService;
-import com.okeandra.demo.services.processing.SberDutyFreeFeed;
-import com.okeandra.demo.services.processing.SberFeedAll0DayKapousOllinOneDay;
-import com.okeandra.demo.services.processing.SberFromSberFeed;
-import com.okeandra.demo.services.processing.InsalesFeed;
-import com.okeandra.demo.services.processing.SberFeed;
-//import com.okeandra.demo.services.transport.email.SendEmail;
+import com.okeandra.demo.services.processing.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-
-
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 @Controller
 public class WebController {
     private SberFromSberFeed deliveryFromSber;
     private InsalesFeed insalesFeed;
-    private SberFeed sberFeed;
     private SberDutyFreeFeed sberDutyFreeFeed;
+    private GroupPriceFeed groupPriceFeed;
     private SberFeedAll0DayKapousOllinOneDay sberFeedAll0DayKapousOllinOneDay;
-    private FileInfoService fileInfoService;
-//    private SendEmail sendEmail;
+    private OzonFeed ozonFeed;
+    private OzonUploadService ozonUploadService;
 
 
-    public WebController(SberFromSberFeed deliveryFromSber, InsalesFeed insalesFeed, SberFeed sberFeed, SberDutyFreeFeed sberDutyFreeFeed, SberFeedAll0DayKapousOllinOneDay sberFeedAll0DayKapousOllinOneDay, FileInfoService fileInfoService) {
+    public WebController(SberFromSberFeed deliveryFromSber, InsalesFeed insalesFeed, SberDutyFreeFeed sberDutyFreeFeed, GroupPriceFeed groupPriceFeed, SberFeedAll0DayKapousOllinOneDay sberFeedAll0DayKapousOllinOneDay, OzonFeed ozonFeed, OzonUploadService ozonUploadService) {
         this.deliveryFromSber = deliveryFromSber;
         this.insalesFeed = insalesFeed;
-        this.sberFeed = sberFeed;
         this.sberDutyFreeFeed = sberDutyFreeFeed;
+        this.groupPriceFeed = groupPriceFeed;
         this.sberFeedAll0DayKapousOllinOneDay = sberFeedAll0DayKapousOllinOneDay;
-        this.fileInfoService = fileInfoService;
+        this.ozonFeed = ozonFeed;
+        this.ozonUploadService = ozonUploadService;
     }
 
     @GetMapping("/")
     public String indexPage(Model model) {
-
-//        String date1CItemsXls = fileInfoService.getExcelSourceFeedDate();
-//        model.addAttribute("source_1CItems_xls_date", date1CItemsXls);
-//
-//        String date1CItemsFeedXLS = fileInfoService.getExcelWithLimitsDate();
-//        model.addAttribute("limitedFeedDate", date1CItemsFeedXLS);
-//
-//        String basicFeedForSberDate = fileInfoService.getXmlBasicFeedDate();
-//        model.addAttribute("basicFeedForSberDate", basicFeedForSberDate);
-//
-//        String dutyFreeFeedForSberDate = fileInfoService.getXmlDutyFreeFeedDate();
-//        model.addAttribute("dutyFreeFeedForSberDate", dutyFreeFeedForSberDate);
-//
-//        String dayPerDayFileDate = fileInfoService.getDayPerDayFileDate();
-//        model.addAttribute("dayPerDayFileDate", dayPerDayFileDate);
-//
-//        String shipmentFromSberWarehouseFeedDate = fileInfoService.getShipmentFormSberWarehouseFeedDate();
-//        model.addAttribute("shipmentFromSberWarehouseFeedDate", shipmentFromSberWarehouseFeedDate);
-//
-//        String itemsFromSberWarehouseFileDate = fileInfoService.getItemsShipmentFormSberWarehouseFileDate();
-//        model.addAttribute("itemsFromSberWarehouseFileDate", itemsFromSberWarehouseFileDate);
-//
-//
         //For no cashing URL
         Random random = new Random();
         model.addAttribute("randomVal", random.nextInt(1000));
         return "index";
     }
-
-//    @GetMapping("/ajax")
-//    public String ajaxPage() {
-//        return "ajax";
-//    }
-
-//    @GetMapping("/query")
-//    public String ajaxQuery() {
-//        System.out.println("YAHOOOOOOOOOOOOOO");
-//        return "query";
-//    }
 
     //Установка безопасного остатка
     @GetMapping("/create-feed-okeandra")
@@ -86,13 +49,6 @@ public class WebController {
         return "result";
     }
 
-    // Из-за херовых сроков пока делаем на все 0 дней кроме Проф.
-//    @GetMapping("/create-feed-sber")
-//    public String createFeedForSber(Model model) {
-//        List<String> log = sberFeed.start();
-//        model.addAttribute("result", log);
-//        return "result";
-//    }
 
     // Из-за херовых сроков пока делаем на все 0 дней кроме Проф.
     @GetMapping("/create-feed-sber")
@@ -101,7 +57,6 @@ public class WebController {
         model.addAttribute("result", log);
         return "result";
     }
-
 
 
     @GetMapping("/create-sber-from-sber")
@@ -119,25 +74,30 @@ public class WebController {
         return "result";
     }
 
-//    Отправка почты не работает в хероку
-//    @GetMapping("/send-email")
-//    public String sendEmail(Model model) {
-//        try {
-//            sendEmail.send();
-//        } catch (IOException e) {
-//            System.out.println("IOEXCEPTION!!!");
-//        }
-//        return "result";
-//    }
 
+    @GetMapping("/create-ozon-feed")
+    public String createOzonFeed(Model model) {
+        List<String> log = ozonFeed.start();
+        model.addAttribute("result", log);
+        return "result";
+    }
 
+    @GetMapping("/create-groupprice")
+    public String createGroupPriceFeed(Model model) {
+        List<String> log = groupPriceFeed.start();
+        model.addAttribute("result", log);
+        return "result";
+    }
 
-//    @GetMapping("/set-limits")
-//    public String setLimits(Model model) {
-//        List<String> log = xlsLimiter.start();
-//        model.addAttribute("result", log);
-//        return "result";
-//    }
+    @PostMapping("/upload-ozon-items")
+    public String singleFileUpload(@RequestParam("file") MultipartFile file,
+                                   Model model) {
+
+        String log = ozonUploadService.uploadFileAndSendInFtp(file);
+        model.addAttribute("result", log);
+
+        return "result";
+    }
 
 
 }
